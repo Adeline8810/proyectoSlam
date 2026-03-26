@@ -1,11 +1,13 @@
 <nav class="menu-bar">
   <div class="brand">SLAM</div>
-  <div class="menu-buttons">
-    <button (click)="go('/slam')">Llenar Slam</button>
-    <button *ngIf="esAdmin" (click)="go('/admin')">Administrador</button>
-    <button class="menu-buttons" (click)="irABuscarAmigo()">
-  🔍 Busca un amigo
+  <div class="menu-buttons-container"> <button type="button" (click)="go('/slam')">Llenar Slam</button>
+
+    <button type="button" *ngIf="esAdmin" (click)="go('/admin')">Administrador</button>
+
+    <button type="button" (click)="irABuscarAmigo()">
+      🔍 Busca un amigo
     </button>
-    <button (click)="logout()">Salir</button>
+
+    <button type="button" (click)="logout()">Salir</button>
   </div>
 </nav>

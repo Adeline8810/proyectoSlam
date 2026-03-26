@@ -10,17 +10,10 @@ import { forkJoin, firstValueFrom } from 'rxjs';
 import { TraduccionService } from '../../../services/traduccion.service';
 import confetti from 'canvas-confetti';
 
-import { NgxParticlesModule } from "@tsparticles/angular";
-
-import { Engine } from "@tsparticles/engine";
-
-
-import { loadFull } from "tsparticles"; // Cambiamos loadSlim por loadFull
-
 @Component({
   selector: 'app-slam',
   standalone: true,
-  imports: [CommonModule, FormsModule, MenuBarComponent,NgxParticlesModule],
+  imports: [CommonModule, FormsModule, MenuBarComponent],
   templateUrl: './slam.component.html',
   styleUrls: ['./slam.component.css']
 })
@@ -85,52 +78,39 @@ export class SlamComponent implements OnInit {
 
         // 1. Prioridad: Foto que viene de la Base de Datos
         // 2. Si no hay en BD, intentamos la del LocalStorage (caché)
-        // --- AQUÍ VA EL CAMBIO SEGURO ---
-        if (this.respuestas.length > 0) {
-          // ...
-          // Definimos la baseApi SIN la barra final
-          const baseApi = 'https://backend-ruth-slam.onrender.com';
-          const fotoGuardada = localStorage.getItem('user_foto_perfil');
+        const baseApi = 'https://backend-ruth-slam.onrender.com';
 
-          if (this.respuestas[0]?.fotoUrl) {
-              let urlBD = this.respuestas[0].fotoUrl;
-              // Si la URL de la BD ya es completa, la usamos.
-              // Si es relativa, nos aseguramos de que empiece con "/"
-              if (!urlBD.startsWith('http')) {
-                  if (!urlBD.startsWith('/')) {
-                      urlBD = '/' + urlBD;
-                  }
-                  this.fotoUrlServidor = `${baseApi}${urlBD}`;
-              } else {
-                  this.fotoUrlServidor = urlBD;
-              }
-              this.fotoPreview = this.fotoUrlServidor;
-            }
-          }
+        const fotoGuardada = localStorage.getItem('user_foto_perfil');
+
+       if (this.respuestas[0]?.fotoUrl) {
+    const urlBD = this.respuestas[0].fotoUrl;
+    // Si la URL de la BD ya es completa (empieza con http), la usamos tal cual
+    // Si es solo "/uploads/...", le sumamos la baseApi
+    this.fotoUrlServidor = urlBD.startsWith('http') ? urlBD : `${baseApi}${urlBD}`;
+    this.fotoPreview = this.fotoUrlServidor;
+}
+else if (fotoGuardada) {
+    this.fotoUrlServidor = fotoGuardada.startsWith('http') ? fotoGuardada : `${baseApi}${fotoGuardada}`;
+    this.fotoPreview = this.fotoUrlServidor;
+}
       }
     },
     error: err => console.error(err)
   });
-
-  this.respuestaService.reiniciarSlam$.subscribe(() => {
-  this.reiniciarCuestionario(); // Esta es la función que pone preguntaActual = 0
-});
-
 }
 
 onFotoSeleccionada(ev: any) {
-    const f: File = ev.target.files && ev.target.files[0];
-    if (!f) return;
-    this.fotoFile = f; // <--- ESTE es el archivo real, el binario. ¡Está perfecto!
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = (e.target as any).result;
-      this.fotoPreview = result; // <--- USAMOS base64 SOLO para que tú lo veas en pantalla (vista previa)
-      //this.fotoUrlServidor = result; // <--- ¡¡BORRA O COMENTA ESTA LÍNEA!! NUNCA pongas base64 aquí.
-    };
-    reader.readAsDataURL(f);
-  }
+  const f: File = ev.target.files && ev.target.files[0];
+  if (!f) return;
+  this.fotoFile = f;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const result = (e.target as any).result;
+    this.fotoPreview = result;
+    this.fotoUrlServidor = result; // Guardamos temporalmente la base64 para la vista
+  };
+  reader.readAsDataURL(f);
+}
   anterior() {
     this.respuestas[this.preguntaActual].texto = this.respuestaActual || null;
     if (this.preguntaActual > 0) {
@@ -151,7 +131,7 @@ onFotoSeleccionada(ev: any) {
 
   siguiente() {
 
-    //this.lanzarChispitas();
+    this.lanzarChispitas();
     this.respuestas[this.preguntaActual].texto = this.respuestaActual || null;
 
     if (this.preguntaActual < this.preguntas.length - 1) {
@@ -173,52 +153,83 @@ this.fotoPreview = this.respuestas[this.preguntaActual].fotoUrl || this.fotoUrlS
   }
 
 
+lanzarChispitas() {
+    const duration = 2 * 1000; // 2 segundos de chispitas
+    const end = Date.now() + duration;
+
+    const frame = () => {
+      // Colores: Rosa fuerte, Blanco y Rosa pastel (como tu SLAM)
+      confetti({
+        particleCount: 3,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.8 }, // Salen de la izquierda
+        colors: ['#ff4a68', '#ffffff', '#ffe6eb']
+      });
+      confetti({
+        particleCount: 3,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.8 }, // Salen de la derecha
+        colors: ['#ff4a68', '#ffffff', '#ffe6eb']
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    };
+    frame();
+  }
+
+
+
+
 async guardarTodo() {
   this.respuestas[this.preguntaActual].texto = this.respuestaActual || null;
 
   try {
     if (this.fotoFile) {
-      // FIX 1: En tu código anterior usabas 'usuarioId' del localStorage,
-      // pero a veces se guarda como 'usuario' (un objeto).
-      // Usamos el this.usuarioId que ya tienes cargado en la clase.
-      const idParaSubir = this.usuarioId.toString();
+      // 1. Obtenemos el ID del usuario logueado (importante para que el backend sepa de quién es la foto)
+      const usuarioId = localStorage.getItem('usuarioId') || '';
 
-      // FIX 2: Llamamos al servicio pasando el ARCHIVO REAL (this.fotoFile)
-      // No pases this.fotoUrlServidor porque ese tiene el texto base64.
-      const pathRelativo = await firstValueFrom(this.respuestaService.subirFoto(this.fotoFile, idParaSubir));
+      // 2. Subimos la foto pasando el ID
+      const pathRelativo = await firstValueFrom(this.respuestaService.subirFoto(this.fotoFile, usuarioId));
 
-      const baseApi = 'https://backend-ruth-slam.onrender.com';
+      // 3. Limpiamos la URL con un "timestamp" para romper la caché del navegador
+      const timestamp = new Date().getTime();
 
-      // Aseguramos que el path relativo empiece con /
-      const cleanPath = pathRelativo.startsWith('/') ? pathRelativo : '/' + pathRelativo;
-      const urlCompleta = `${baseApi}${cleanPath}?v=${new Date().getTime()}`;
+      const urlCompleta = `https://backend-ruth-slam.onrender.com${pathRelativo}?v=${new Date().getTime()}`;
 
-      // Sincronizamos las respuestas con la nueva URL
+      // Sincronizamos
       this.respuestas.forEach(r => r.fotoUrl = urlCompleta);
       this.fotoUrlServidor = urlCompleta;
-      this.fotoPreview = urlCompleta;
-
       localStorage.setItem('user_foto_perfil', urlCompleta);
+
     }
   } catch (err) {
     console.error('Error al subir foto:', err);
-    // Si sale error 400 aquí, revisa que el servicio use FormData (abajo te explico)
     alert('Hubo un problema al subir la imagen.');
-    return; // Detenemos si la foto falló
   }
 
-  // Guardar el resto de respuestas (texto)
-  this.respuestaService.guardarRespuestas(this.respuestas).subscribe({
-    next: () => {
-      this.completado = true;
-      confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-    },
-    error: err => {
-      console.error(err);
-      alert('Error al guardar respuestas');
+  // Guardar el resto de respuestas
+ this.respuestaService.guardarRespuestas(this.respuestas).subscribe({
+  next: () => {
+    this.completado = true;
+
+    // Si subimos una foto, la guardamos en el localStorage para que
+    // al refrescar el perfil se vea la nueva y no la de Ruth
+    if (this.fotoUrlServidor) {
+      localStorage.setItem('user_foto_perfil', this.fotoUrlServidor);
+      console.log('Foto actualizada en storage:', this.fotoUrlServidor);
     }
-  });
+  },
+  error: err => {
+    console.error(err);
+    alert('Error al guardar respuestas');
+  }
+});
 }
+
 
 
 
@@ -256,104 +267,15 @@ obtenerTraduccionActual() {
       if (!this.preguntasTraducidas[lang]) {
         this.preguntasTraducidas[lang] = {};
       }
-      // Guardamos la respuesta (res es el string que viene de Railway)
+      // Guardamos la respuesta
       this.preguntasTraducidas[lang][idPregunta] = res;
       this.cargando = false;
     },
     error: (err) => {
-      console.error('Error en Railway:', err);
+      console.error('Error en RENDER:', err);
       this.cargando = false;
     }
   });
 }
-
-
-reiniciarCuestionario() {
-    this.preguntaActual = 0;      // Volver a la pregunta 1
-    this.completado = false;      // Ocultar el mensaje de "Gracias"
-
-    // Cargamos el texto de la primera pregunta si ya existía
-    this.respuestaActual = this.respuestas[0]?.texto || '';
-
-    // Cargamos la foto de la primera pregunta o la de perfil
-    this.fotoPreview = this.respuestas[0]?.fotoUrl || this.fotoUrlServidor;
-
-    // Opcional: Si quieres que las chispitas salgan al volver
-    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-  }
-
-
-  public particlesOptions = {
-    fpsLimit: 120,
-    particles: {
-      color: {
-        // AQUÍ PONEMOS TUS COLORES: Rosa, Plata y Fucsia
-        value: ["#ff69b4", "#C0C0C0", "#FF1493"]
-      },
-      links: {
-        enable: false
-      },
-      move: {
-        direction: "none",
-        enable: true,
-        outModes: {
-          default: "out"
-        },
-        random: true,
-        speed: { min: 0.1, max: 1 }, // Movimiento muy suave y lento
-        straight: false
-      },
-      number: {
-        density: {
-          enable: true,
-          area: 800
-        },
-        value: 150 // Cantidad de brillos
-      },
-      opacity: {
-        value: { min: 0.1, max: 0.8 }, // Brillo variable
-        animation: {
-          enable: true,
-          speed: 1,
-          sync: false
-        }
-      },
-      shape: {
-        type: "circle" // FORMA DE ESTRELLA PARA QUE BRILLE MÁS
-      },
-      size: {
-        value: { min: 1, max: 3 }, // Tamaño variable
-        animation: {
-          enable: true,
-          speed: 2,
-          sync: false
-        }
-      },
-      twinkle: { // EFECTO DE BRILLO PARPADEANTE
-        particles: {
-          enable: true,
-          color: {
-            value: ["#ffffff", "#ff85a2"] // Brillo blanco y rosa
-          },
-          frequency: 0.05,
-          opacity: 1
-        }
-      }
-    },
-    detectRetina: true,
-      fullScreen: {
-      enable: true,
-      zIndex: 0 // Detrás de todo el contenido
-    },
-    background: {
-      color: "transparent" // Fondo transparente
-    }
-
-  };
-
-public particlesInit = async (engine: Engine): Promise<void> => {
-  await loadFull(engine); // Usamos loadFull aquí también
-};
-
 
 }

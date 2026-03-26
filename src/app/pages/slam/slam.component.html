@@ -1,36 +1,23 @@
 <app-menubar></app-menubar>
 
-<ngx-particles
-    [id]="'tsparticles'"
-    [options]="particlesOptions"
-    [particlesInit]="particlesInit">
-</ngx-particles>
 
-<div class="header-flex">
-
-  <div class="bienvenida-contenedor">
-    <h1>Hola, <span>{{nombreUsuario}}</span> ✨</h1>
-    <p>Cuéntanos un poco más sobre ti en este Slam.</p>
-  </div>
+<div class="bienvenida-contenedor" *ngIf="!completado">
+  <h1 class="slam-title">Hola, <span>{{ nombreUsuario }}</span> ✨</h1>
+  <p>Cuéntanos un poco más sobre ti en este Slam.</p>
+</div>
 
 <div class="lang-selector-container">
-  <span class="lang-titulo-label">Selecciona tu idioma</span>
-
   <label for="langCombo" class="lang-label">
     <i class="fas fa-globe-americas"></i>
   </label>
   <select id="langCombo" [(ngModel)]="idiomaSeleccionado" (change)="obtenerTraduccionActual()" class="slam-combobox">
     <option value="es">🇪🇸 Español</option>
-    <option value="it">🇮🇹 Italiano</option>
     <option value="fr">🇫🇷 Francés</option>
     <option value="uk">🇺🇦 Ucraniano</option>
     <option value="en">🇺🇸 Inglés</option>
     <option value="fa">🇮🇷 Persa (Farsi)</option>
   </select>
 </div>
-
-</div>
-<hr class="divisor">
 
 <div class="slam-container" *ngIf="!completado && preguntas.length > 0">
 <div class="pregunta-box">
