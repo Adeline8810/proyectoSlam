@@ -5,8 +5,8 @@
 
   @Injectable({ providedIn: 'root' })
   export class RespuestaService {
-    //private api = 'http://localhost:8080/api/respuestas';
-      private api = 'http://localhost:8080/api/respuestas';
+
+      private api = 'https://backend-ruth-slam.onrender.com/api/respuestas';
 
     constructor(private http: HttpClient) {}
 
@@ -23,13 +23,13 @@
   formData.append('file', file);
   formData.append('usuarioId', usuarioId);
 
-  return this.http.post('http://localhost:8080/api/respuestas/upload', formData, {
+  return this.http.post('https://backend-ruth-slam.onrender.com/api/respuestas/upload', formData, {
     responseType: 'text' // Importante porque Java devuelve un String, no un JSON
   });
 }
 
   actualizarRespuestas(respuestas: Respuesta[]): Observable<Respuesta[]> {
-    return this.http.post<Respuesta[]>('http://localhost:8080/api/respuestas/actualizar', respuestas);
+    return this.http.post<Respuesta[]>('https://backend-ruth-slam.onrender.com/api/respuestas/actualizar', respuestas);
   }
 
     obtenerRespuestasPorUsuario(usuarioId: number): Observable<Respuesta[]> {

@@ -33,7 +33,7 @@
   </button>
 
   <div class="perfil-header" *ngIf="respuestasAmigo.length > 0 && respuestasAmigo[0].fotoUrl">
-  <img [src]="'http://localhost:8080' + respuestasAmigo[0].fotoUrl + '?t=' + obtenerTiempo()"
+  <img [src]="'https://backend-ruth-slam.onrender.com' + respuestasAmigo[0].fotoUrl + '?t=' + obtenerTiempo()"
        class="foto-perfil-amigo"
        alt="Foto de perfil">
 </div>

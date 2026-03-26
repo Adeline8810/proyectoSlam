@@ -9,11 +9,11 @@ import { map } from 'rxjs/operators';
 export class TraduccionService {
 
   // 1. Definimos las URLs base correctamente
-  private apiBase = 'http://localhost:8080/api';
+  private apiBase = 'https://backend-ruth-slam.onrender.com/api';
 
   // Estas son las que causaban error si no estaban bien declaradas:
-  private apiUsuarios = 'http://localhost:8080/api/usuarios';
-  private apiRespuestas = 'http://localhost:8080/api/respuestas';
+  private apiUsuarios = 'https://backend-ruth-slam.onrender.com/api/usuarios';
+  private apiRespuestas = 'https://backend-ruth-slam.onrender.com/api/respuestas';
 
   constructor(private http: HttpClient) { }
 

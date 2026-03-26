@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class UsuarioService {
   // 1. Limpiamos la URL para que sea solo la base de usuarios
-  private api = 'http://localhost:8080/api/usuarios';
+  private api = 'https://backend-ruth-slam.onrender.com/api/usuarios';
 
   constructor(private http: HttpClient) {}
 

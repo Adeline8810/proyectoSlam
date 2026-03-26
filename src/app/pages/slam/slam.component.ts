@@ -89,7 +89,7 @@ export class SlamComponent implements OnInit {
         if (this.respuestas.length > 0) {
           // ...
           // Definimos la baseApi SIN la barra final
-          const baseApi = 'http://localhost:8080';
+          const baseApi = 'https://backend-ruth-slam.onrender.com';
           const fotoGuardada = localStorage.getItem('user_foto_perfil');
 
           if (this.respuestas[0]?.fotoUrl) {
@@ -187,7 +187,7 @@ async guardarTodo() {
       // No pases this.fotoUrlServidor porque ese tiene el texto base64.
       const pathRelativo = await firstValueFrom(this.respuestaService.subirFoto(this.fotoFile, idParaSubir));
 
-      const baseApi = 'http://localhost:8080';
+      const baseApi = 'https://backend-ruth-slam.onrender.com';
 
       // Aseguramos que el path relativo empiece con /
       const cleanPath = pathRelativo.startsWith('/') ? pathRelativo : '/' + pathRelativo;
