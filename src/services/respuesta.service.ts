@@ -21,7 +21,7 @@
   }
 
   actualizarRespuestas(respuestas: Respuesta[]): Observable<Respuesta[]> {
-
+  //  return this.http.post<Respuesta[]>('http://localhost:8080/api/respuestas/actualizar', respuestas);
   return this.http.post<Respuesta[]>('https://backend-ruth-slam.onrender.com/api/respuestas/actualizar', respuestas);
 
 }
